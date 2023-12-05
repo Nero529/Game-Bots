@@ -1,0 +1,3 @@
+#Ignore files that change constantly while code is running
+#*.png
+#Barter_Stock.html

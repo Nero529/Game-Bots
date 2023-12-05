@@ -1,0 +1,6 @@
+Auto Barter: N
+T1 Item Cap: 50
+T2 Item Cap: 50
+T3 Item Cap: 50
+T4 Item Cap: 50
+T5 Item Cap: 4
