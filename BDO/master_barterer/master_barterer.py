@@ -5,6 +5,8 @@ import cv2
 import win32gui
 import time
 import pandas as pd
+import io
+import os
 
 class Client:
 
@@ -91,7 +93,7 @@ def open_barters():
     pydirectinput.press('esc')
     time.sleep(0.3)
     pyautogui.screenshot(game_img)
-    x,y = bdo.match_image(game_img, 'barter_icon.png')
+    x,y = bdo.match_image(game_img, 'screenshots/barter_icon.png')
     click(x,y)
     time.sleep(0.3)
 
@@ -131,7 +133,7 @@ def get_route(item_name, tier):
         pydirectinput.press(x)
     pydirectinput.press('enter')
     pyautogui.screenshot(game_img)
-    x,y = bdo.match_image(game_img, 'screenshots/navigate_button.png')
+    x,y = bdo.match_image(game_img, 'BDO/master_barterer/screenshots/navigate_button.png')
     pyautogui.moveTo(x,y)
     time.sleep(0.5)
     click(x,y)
@@ -188,7 +190,8 @@ def read_config(file): # Reads config file for auto status and max_quantities de
     return auto, max_items
 
 def look_up_item(item_name, html_file): # Returns database item name, tier, and quantity
-    barter_data = pd.read_html(html_file)[0]
+    with open(html_file, 'r') as f:
+        barter_data = pd.read_html(f.read())[0]
     name_columns = ["B","E","H","K","N"]
     for tier, x in enumerate(name_columns):
         for index, row in enumerate(barter_data[x]):
@@ -213,7 +216,8 @@ def get_barter_quantity(tier): # Returns maximum barters for a given tier
 
 # Used for getting the player's desired max quantity for each tier of item (to be used for auto checking barter info)
 #max_items = read_config("config.txt") 
-html_file = 'Barter_Stock.html'
+html_file = 'barter.html'
+print(os.listdir())
 test = False
 if not test:
     raw_item_list = input("Enter name of items in barter route: ")
