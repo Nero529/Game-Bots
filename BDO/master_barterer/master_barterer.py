@@ -7,6 +7,7 @@ import time
 import pandas as pd
 import io
 import os
+import keyboard
 
 class Client:
 
@@ -85,6 +86,8 @@ class Client:
         return self._handle == win32gui.GetForegroundWindow()
 
 def click(x,y, button='left'):
+    pyautogui.moveTo(x,y)
+    time.sleep(0.3)
     pyautogui.mouseDown(x,y, button=button)
     time.sleep(0.5) 
     pyautogui.mouseUp(x,y, button=button)
@@ -202,7 +205,7 @@ def look_up_item(item_name, html_file): # Returns database item name, tier, and 
                     # Returns the full item name, tier of item, and quantity held
                     # chr(ord(x) + 1) used to convert column to ascii and then look one over for quantity
                     if item_name in row.lower():
-                        return row.lower(), tier + 1, barter_data[chr(ord(x) + 1)][index] 
+                        return row.lower(), int(tier + 1), int(barter_data[chr(ord(x) + 1)][index]) 
             else:
                 break
     return False
@@ -213,12 +216,122 @@ def get_barter_quantity(tier): # Returns maximum barters for a given tier
     else:
         return 6
 
+def click_img(img, threshold,button='left', offset_x=0, offset_y=0, region = None): #
+    
+    if not 'screenshots' in os.getcwd():
+        os.chdir('screenshots')
+
+    pyautogui.screenshot(game_img,region=region)
+    while not bdo.match_image(game_img, img, threshold=threshold):
+        pyautogui.screenshot(game_img,region=region)
+        time.sleep(0.3)
+    x,y = bdo.match_image(game_img, img,threshold=threshold)
+    click(x+offset_x,y+offset_y,button=button)
+    pyautogui.moveTo(0,10)
+    os.chdir('..')
+
+def to_iliya():
+    pydirectinput.press('m')
+    click_img('find_npc.png', 0.2)
+    click_img('favorites.png',0.3)
+    os.chdir('screenshots')
+    while not bdo.match_image(game_img,'dario_favorite.png',threshold=0.1):
+        pyautogui.screenshot(game_img)
+    x,y = bdo.match_image(game_img,'dario_favorite.png',threshold=0.1)
+    a,b = bdo.match_image('dario_favorite.png', 'locate_npc.png',threshold=0.2)
+    click(x+a/2 - 10, y)
+    pydirectinput.press('m')
+    time.sleep(2)
+    pydirectinput.press('t')
+    print('Navigating to Dario at Iliya\n')
+    os.chdir('..')
+
+def to_dario():
+    at_iliya = False
+    count = 0
+    os.chdir('screenshots')
+    while not at_iliya:
+        pyautogui.screenshot(game_img)
+        if bdo.match_image(game_img,'disembark.png', threshold=0.1):
+            count += 1
+            print(count)
+            time.sleep(1)
+        else:
+            count = 0
+
+        if count == 3:
+            at_iliya = True
+
+    pydirectinput.press('ctrl')
+    while bdo.match_image(game_img,'disembark.png', threshold=0.2):
+        click_img('disembark.png',threshold=0.2)
+        os.chdir('screenshots')
+        pyautogui.screenshot(game_img)
+    time.sleep(1)
+    pydirectinput.press('ctrl')
+    pydirectinput.press('r')
+
+def repair_ship():
+    click_img('repair_icon.png',threshold=0.2)
+    os.chdir('screenshots')
+    while not bdo.match_image(game_img,'repair.png',threshold=0.2):
+        pyautogui.screenshot(game_img)
+        time.sleep(0.3)
+    x, y = bdo.match_image(game_img,'repair.png',threshold=0.2)
+    click(x-120,y)
+    pydirectinput.press('space')
+    pydirectinput.press('esc')
+
+def buy_supplies():
+    click_img('wharf.png')
+    click_img('buy_supplies.png')
+    pydirectinput.press('space')
+
+def unload_ship(barter_item_list):
+    click(304,215)
+    click_img('load_cargo.png',threshold=0.2)
+    os.chdir('screenshots')
+
+    # Finds the load icon from the load cargo to then generate the region for the 'My Ship' inventory
+    while not bdo.match_image(game_img,'load_icon.png',threshold=0.1):
+        pyautogui.screenshot(game_img)
+        time.sleep(0.3)
+    x, y = bdo.match_image(game_img,'load_icon.png',threshold=0.1)
+    x -= 20
+    y += 50
+    
+    while bdo.match_image(game_img, barter_item_list[0] + '.png', threshold=0.15):
+        click_img(barter_item_list[0] + '.png',threshold=0.2, button='right', offset_x = x, offset_y = y,
+                  region=(x,y,400,500))
+        os.chdir('screenshots')
+        time.sleep(0.5)
+        pyautogui.screenshot(game_img, region=(x,y,400,500))
+    barter_item_list.pop(0)
+    return barter_item_list
+
+
+
+
+        
 
 # Used for getting the player's desired max quantity for each tier of item (to be used for auto checking barter info)
 #max_items = read_config("config.txt") 
+
+bdo = Client()
+bdo.register_window()
+bdo.set_active()
+check_pos = False
+while check_pos:
+    if keyboard.is_pressed('~'):
+        print(pyautogui.position())
+
 html_file = 'barter.html'
-print(os.listdir())
-test = False
+game_img = 'game_screen.png'
+os.chdir('BDO/master_barterer')
+items = ['elixir']
+items = unload_ship(items)
+
+test = True
 if not test:
     raw_item_list = input("Enter name of items in barter route: ")
     barter_item_list = []
@@ -229,14 +342,14 @@ if not test:
             item_name += x
         else:
             if not look_up_item(item_name, html_file):
-                print(item_name + " was not found. Terminating program")
+                print(item_name + " was not found\n")
             else:
                 barter_item_list.append(look_up_item(item_name, html_file)[0])
                 item_name = ''
 
         if index == len(raw_item_list) - 1 :
             if not look_up_item(item_name, html_file):
-                print(item_name + " was not found. Terminating program")
+                print(item_name + " was not found\n")
             else:
                 barter_item_list.append(look_up_item(item_name, html_file)[0])
 
