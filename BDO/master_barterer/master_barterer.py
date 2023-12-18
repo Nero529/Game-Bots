@@ -1,18 +1,21 @@
 from barter_functions import Barterer
 import os
+import keyboard
+import pyautogui
 
 
-html_file = 'barter.html'
-game_img = 'game_screen.png'
-config = 'config.txt'
-bdo_bot = Barterer(game_img=game_img,html_file=html_file, config=config)
-bdo_bot.register_window()
-bdo_bot.set_active()
 
-
-os.chdir('BDO/master_barterer')
+bdo_bot = Barterer()
+bdo_bot.register_window("BLACK DESERT")
+#bdo_bot.set_active()
+check_pos = False
+while check_pos:
+    if keyboard.is_pressed('~'):
+        print(pyautogui.position())
 items = ['ancient order', 'urchin spine']
-bdo_bot.iliya_routine(items)
+
+#bdo_bot.look_up_item(items[0])
+bdo_bot.load_ship(['stone slab', 'ancient order'])
 
 
 # test = True
@@ -51,7 +54,3 @@ bdo_bot.iliya_routine(items)
 #             if tier == 6:
 #                 tier = 1
 
-#check_pos = False
-#while check_pos:
-    #if keyboard.is_pressed('~'):
-        #print(pyautogui.position())
